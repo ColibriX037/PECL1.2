@@ -153,11 +153,11 @@ Error:	//Liberamos la memoria de la variable en caso de error
 */
 __device__ void add_down(int *matriz, int x, int y, int altura, int anchura)
 {
-	if (x != altura - 1 && y < anchura)
+	if (x != altura - 1 && y < anchura) //Los ultimos hilos no deben realizar ninguna operacion pues serán modificados por los demas
 	{
-		if (matriz[x*anchura + y] != 0)
+		if (matriz[x*anchura + y] != 0) //Si es distinto de 0, gestiona su posible suma o desplazamiento
 		{
-			if (matriz[x*anchura + y] == matriz[(x + 1)*anchura + y])
+			if (matriz[x*anchura + y] == matriz[(x + 1)*anchura + y]) //Si es igual a su inferior, se procede a comprobar el numero de celdas con el mismo numero que hay en esa columna
 			{
 				int iguales = 0;
 				iguales++;
@@ -171,13 +171,13 @@ __device__ void add_down(int *matriz, int x, int y, int altura, int anchura)
 						break;
 					}
 				}
-				if (iguales % 2 == 0)
+				if (iguales % 2 == 0) //Si el numero es par, se suman, si no, ese numero será mezclado con otro y no estará disponible
 				{
 					matriz[(x + 1)*anchura + y] = matriz[(x + 1)*anchura + y] * 2;
 					matriz[x*anchura + y] = 0;
 				}
 			}
-			else if (matriz[(x + 1)*anchura + y] == 0)
+			else if (matriz[(x + 1)*anchura + y] == 0) //Se comprueba que otros hilos hayan dejado 0 en sus operaciones para desplazarse
 			{
 				matriz[(x + 1)*anchura + y] = matriz[x*anchura + y];
 				matriz[x*anchura + y] = 0;
@@ -191,11 +191,11 @@ __device__ void add_down(int *matriz, int x, int y, int altura, int anchura)
 */
 __device__ void stack_down(int *matriz, int anchura, int altura, int x, int y) {
 
-	for (int i = altura - 1; i > 0; i--)
+	for (int i = altura - 1; i > 0; i--)  //realizaremos el desplazamiento celda a celda una altura-1 veces para gestionar la posibilidad del ultimo poniendose el primero de la lista
 	{
-		if ((x != altura - 1) && (matriz[x*anchura + y] != 0) && matriz[(x + 1)*anchura + y] == 0)
+		if ((x != altura - 1) && (matriz[x*anchura + y] != 0) && matriz[(x + 1)*anchura + y] == 0) //Si la celda pertenece a la primera fila, es 0 o su superior no es 0, no hace nada
 		{
-			matriz[(x + 1)*anchura + y] = matriz[x*anchura + y];
+			matriz[(x + 1)*anchura + y] = matriz[x*anchura + y]; //Si lo es, desplazamos la celda
 			matriz[x*anchura + y] = 0;
 		}
 		__syncthreads();
@@ -210,8 +210,8 @@ __global__ void mov_downK(int *matriz, int anchura, int altura) {
 	int x = blockIdx.x;
 	int y = threadIdx.y;
 
-	stack_down(matriz, anchura, altura, x, y);
-	add_down(matriz, x, y, altura, anchura);
+	stack_down(matriz, anchura, altura, x, y);		//Realizamos las llamadas de la siguiente manera para gestionar el movimiento:
+	add_down(matriz, x, y, altura, anchura);		//2 2 0 4   -> 4 4 0 0
 	__syncthreads();
 	stack_down(matriz, anchura, altura, x, y);
 }
@@ -222,7 +222,7 @@ __global__ void mov_downK(int *matriz, int anchura, int altura) {
 cudaError_t move_down(int *matriz, int ancho, int alto) {
 	cudaError_t cudaStatus;
 
-	int *dev_m;
+	int *dev_m;	//Establecemos la matriz donde se van a recoger los resultados
 
 	cudaStatus = cudaSetDevice(0);
 	if (cudaStatus != cudaSuccess)
@@ -231,19 +231,20 @@ cudaError_t move_down(int *matriz, int ancho, int alto) {
 		goto Error;
 	}
 
-	cudaStatus = cudaMalloc((void**)&dev_m, ancho*alto * sizeof(int));
+	cudaStatus = cudaMalloc((void**)&dev_m, ancho*alto * sizeof(int)); //Reservamos memoria para la matriz resultado
 	if (cudaStatus != cudaSuccess)
 	{
 		fprintf(stderr, "Error en Malloc");
 		goto Error;
 	}
 
-	cudaStatus = cudaMemcpy(dev_m, matriz, ancho*alto * sizeof(int), cudaMemcpyHostToDevice);
+	cudaStatus = cudaMemcpy(dev_m, matriz, ancho*alto * sizeof(int), cudaMemcpyHostToDevice); //copiamos los datos iniciales
 	if (cudaStatus != cudaSuccess) {
 		fprintf(stderr, "cudaMemcpy failed!");
 		goto Error;
 	}
 
+	//Establecemos las dimensiones pertinentes
 	dim3 dimgrid(alto, 1);
 	dim3 dimblock(1, ancho, 1);
 
@@ -269,7 +270,7 @@ cudaError_t move_down(int *matriz, int ancho, int alto) {
 		goto Error;
 	}
 
-Error:
+Error: //Liberamos la memoria de la variable en caso de error
 	cudaFree(dev_m);
 
 	return cudaStatus;
@@ -280,11 +281,12 @@ Error:
 */
 __device__ void add_left(int *matriz, int x, int y, int altura, int anchura)
 {
-	if (y != 0 && y < anchura)
+	if (y != 0 && y < anchura)	//Los primeros hilos de la izquierda no deben realizar ninguna operacion pues serán modificados por los demas
+
 	{
-		if (matriz[x*anchura + y] != 0)
+		if (matriz[x*anchura + y] != 0)	//Si es distinto de 0, gestiona su posible suma o desplazamiento
 		{
-			if (matriz[x*anchura + y] == matriz[x*anchura + (y - 1)])
+			if (matriz[x*anchura + y] == matriz[x*anchura + (y - 1)]) //Si es igual a su vecino izquierdo, se procede a comprobar el numero de celdas con el mismo numero que hay en esa columna
 			{
 				int iguales = 0;
 				iguales++;
@@ -298,13 +300,13 @@ __device__ void add_left(int *matriz, int x, int y, int altura, int anchura)
 						break;
 					}
 				}
-				if (iguales % 2 == 0)
+				if (iguales % 2 == 0)	//Si el numero es par, se suman, si no, ese numero será mezclado con otro y no estará disponible
 				{
 					matriz[x*anchura + (y - 1)] = matriz[x*anchura + (y - 1)] * 2;
 					matriz[x*anchura + y] = 0;
 				}
 			}
-			else if (matriz[x*anchura + (y - 1)] == 0)
+			else if (matriz[x*anchura + (y - 1)] == 0)	 //Se comprueba que otros hilos hayan dejado 0 en sus operaciones para desplazarse
 			{
 				matriz[x*anchura + (y - 1)] = matriz[x*anchura + y];
 				matriz[x*anchura + y] = 0;
@@ -318,14 +320,14 @@ __device__ void add_left(int *matriz, int x, int y, int altura, int anchura)
 */
 __device__ void stack_left(int *matriz, int anchura, int altura, int x, int y) {
 
-	for (int i = anchura - 1; i > 0; i--)
+	for (int i = anchura - 1; i > 0; i--)	 //realizaremos el desplazamiento celda a celda una altura-1 veces para gestionar la posibilidad del ultimo poniendose el primero de la lista
 	{
-		if ((y != 0) && (matriz[x*anchura + y] != 0) && matriz[x*anchura + (y - 1)] == 0)
+		if ((y != 0) && (matriz[x*anchura + y] != 0) && matriz[x*anchura + (y - 1)] == 0)	//Si la celda pertenece a la primera fila, es 0 o su superior no es 0, no hace nada
 		{
-			matriz[x*anchura + (y - 1)] = matriz[x*anchura + y];
+			matriz[x*anchura + (y - 1)] = matriz[x*anchura + y];	//Si lo es, desplazamos la celda
 			matriz[x*anchura + y] = 0;
 		}
-		__syncthreads();
+		__syncthreads();	//utilizamos una sincronizacion para que estos pasos sean realizados a la vez por los hilos del bloque 
 	}
 }
 
@@ -337,8 +339,8 @@ __global__ void mov_leftK(int *matriz, int anchura, int altura) {
 	int x = blockIdx.x;
 	int y = threadIdx.y;
 
-	stack_left(matriz, anchura, altura, x, y);
-	add_left(matriz, x, y, altura, anchura);
+	stack_left(matriz, anchura, altura, x, y);		//Realizamos las llamadas de la siguiente manera para gestionar el movimiento:
+	add_left(matriz, x, y, altura, anchura);		//2 2 0 4   -> 4 4 0 0
 	__syncthreads();
 	stack_left(matriz, anchura, altura, x, y);
 }
@@ -349,7 +351,7 @@ __global__ void mov_leftK(int *matriz, int anchura, int altura) {
 cudaError_t move_left(int *matriz, int ancho, int alto) {
 	cudaError_t cudaStatus;
 
-	int *dev_m;
+	int *dev_m;		//Establecemos la matriz donde se van a recoger los resultados
 
 	cudaStatus = cudaSetDevice(0);
 	if (cudaStatus != cudaSuccess)
@@ -358,19 +360,20 @@ cudaError_t move_left(int *matriz, int ancho, int alto) {
 		goto Error;
 	}
 
-	cudaStatus = cudaMalloc((void**)&dev_m, ancho*alto * sizeof(int));
+	cudaStatus = cudaMalloc((void**)&dev_m, ancho*alto * sizeof(int));	//Reservamos memoria para la matriz resultado
 	if (cudaStatus != cudaSuccess)
 	{
 		fprintf(stderr, "Error en Malloc");
 		goto Error;
 	}
 
-	cudaStatus = cudaMemcpy(dev_m, matriz, ancho*alto * sizeof(int), cudaMemcpyHostToDevice);
+	cudaStatus = cudaMemcpy(dev_m, matriz, ancho*alto * sizeof(int), cudaMemcpyHostToDevice);	//copiamos los datos iniciales
 	if (cudaStatus != cudaSuccess) {
 		fprintf(stderr, "cudaMemcpy failed!");
 		goto Error;
 	}
 
+	//Establecemos las dimensiones pertinentes
 	dim3 dimgrid(alto, 1);
 	dim3 dimblock(1, ancho, 1);
 
@@ -389,14 +392,14 @@ cudaError_t move_left(int *matriz, int ancho, int alto) {
 		goto Error;
 	}
 
-	cudaStatus = cudaMemcpy(matriz, dev_m, ancho*alto * sizeof(int), cudaMemcpyDeviceToHost);
+	cudaStatus = cudaMemcpy(matriz, dev_m, ancho*alto * sizeof(int), cudaMemcpyDeviceToHost);	//recogemos el resultado en la variable del host
 	if (cudaStatus != cudaSuccess)
 	{
 		fprintf(stderr, "Error en memcpy to host de mov_leftK");
 		goto Error;
 	}
 
-Error:
+Error:	//Liberamos la memoria de la variable en caso de error
 	cudaFree(dev_m);
 
 	return cudaStatus;
@@ -407,11 +410,11 @@ Error:
 */
 __device__ void add_right(int *matriz, int x, int y, int altura, int anchura)
 {
-	if (y != anchura - 1 && y < anchura)
+	if (y != anchura - 1 && y < anchura)	//Los primeros hilos de la derecha no deben realizar ninguna operacion pues serán modificados por los demas
 	{
-		if (matriz[x*anchura + y] != 0)
+		if (matriz[x*anchura + y] != 0)	//Si es distinto de 0, gestiona su posible suma o desplazamiento
 		{
-			if (matriz[x*anchura + y] == matriz[x*anchura + (y + 1)])
+			if (matriz[x*anchura + y] == matriz[x*anchura + (y + 1)])//Si es igual a su superior, se procede a comprobar el numero de celdas con el mismo numero que hay en esa columna
 			{
 				int iguales = 0;
 				iguales++;
@@ -425,13 +428,13 @@ __device__ void add_right(int *matriz, int x, int y, int altura, int anchura)
 						break;
 					}
 				}
-				if (iguales % 2 == 0)
+				if (iguales % 2 == 0)		//Si el numero es par, se suman, si no, ese numero será mezclado con otro y no estará disponible
 				{
 					matriz[x*anchura + (y + 1)] = matriz[x*anchura + (y + 1)] * 2;
 					matriz[x*anchura + y] = 0;
 				}
 			}
-			else if (matriz[x*anchura + (y + 1)] == 0)
+			else if (matriz[x*anchura + (y + 1)] == 0)	//Se comprueba que otros hilos hayan dejado 0 en sus operaciones para desplazarse
 			{
 				matriz[x*anchura + (y + 1)] = matriz[x*anchura + y];
 				matriz[x*anchura + y] = 0;
@@ -445,14 +448,14 @@ __device__ void add_right(int *matriz, int x, int y, int altura, int anchura)
 */
 __device__ void stack_right(int *matriz, int anchura, int altura, int x, int y) {
 
-	for (int i = anchura - 1; i > 0; i--)
+	for (int i = anchura - 1; i > 0; i--)	//realizaremos el desplazamiento celda a celda una altura-1 veces para gestionar la posibilidad del ultimo poniendose el primero de la lista
 	{
-		if ((y != anchura - 1) && (matriz[x*anchura + y] != 0) && matriz[x*anchura + (y + 1)] == 0)
+		if ((y != anchura - 1) && (matriz[x*anchura + y] != 0) && matriz[x*anchura + (y + 1)] == 0)	//Si la celda pertenece a la primera fila, es 0 o su superior no es 0, no hace nada
 		{
-			matriz[x*anchura + (y + 1)] = matriz[x*anchura + y];
+			matriz[x*anchura + (y + 1)] = matriz[x*anchura + y];	//Si lo es, desplazamos la celda
 			matriz[x*anchura + y] = 0;
 		}
-		__syncthreads();
+		__syncthreads();	//utilizamos una sincronizacion para que estos pasos sean realizados a la vez por los hilos del bloque
 	}
 }
 
@@ -463,8 +466,8 @@ __global__ void mov_rightK(int *matriz, int anchura, int altura) {
 	int x = blockIdx.x;
 	int y = threadIdx.y;
 
-	stack_right(matriz, anchura, altura, x, y);
-	add_right(matriz, x, y, altura, anchura);
+	stack_right(matriz, anchura, altura, x, y);		//Realizamos las llamadas de la siguiente manera para gestionar el movimiento:
+	add_right(matriz, x, y, altura, anchura);		//2 2 0 4   -> 4 4 0 0
 	__syncthreads();
 	stack_right(matriz, anchura, altura, x, y);
 }
@@ -473,7 +476,7 @@ __global__ void mov_rightK(int *matriz, int anchura, int altura) {
 /*	move_right
 *	Metodo que gestiona la llamada al kerner mov_rightK
 */
-cudaError_t move_right(int *matriz, int ancho, int alto) {
+cudaError_t move_right(int *matriz, int ancho, int alto) {	//Establecemos la matriz donde se van a recoger los resultados
 	cudaError_t cudaStatus;
 
 	int *dev_m;
@@ -485,7 +488,7 @@ cudaError_t move_right(int *matriz, int ancho, int alto) {
 		goto Error;
 	}
 
-	cudaStatus = cudaMalloc((void**)&dev_m, ancho*alto * sizeof(int));
+	cudaStatus = cudaMalloc((void**)&dev_m, ancho*alto * sizeof(int));	//Reservamos memoria para la matriz resultado
 	if (cudaStatus != cudaSuccess)
 	{
 		fprintf(stderr, "Error en Malloc");
@@ -498,6 +501,7 @@ cudaError_t move_right(int *matriz, int ancho, int alto) {
 		goto Error;
 	}
 
+	//Establecemos las dimensiones pertinentes
 	dim3 dimgrid(alto, 1);
 	dim3 dimblock(1, ancho, 1);
 
@@ -516,14 +520,15 @@ cudaError_t move_right(int *matriz, int ancho, int alto) {
 		goto Error;
 	}
 
-	cudaStatus = cudaMemcpy(matriz, dev_m, ancho*alto * sizeof(int), cudaMemcpyDeviceToHost);
+	cudaStatus = cudaMemcpy(matriz, dev_m, ancho*alto * sizeof(int), cudaMemcpyDeviceToHost); //recogemos el resultado en la variable del host
+
 	if (cudaStatus != cudaSuccess)
 	{
 		fprintf(stderr, "Error en memcpy to host de mov_rightK");
 		goto Error;
 	}
 
-Error:
+Error:	//Liberamos la memoria de la variable en caso de error
 	cudaFree(dev_m);
 
 	return cudaStatus;
