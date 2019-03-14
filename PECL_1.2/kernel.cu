@@ -21,6 +21,9 @@ int* MostrarEspecificaciones();
 
 cudaError_t cudaStatus;
 
+/*	add_up
+*	Función del kernel para sumar hacia arriba todos los números que sean iguales.
+*/
 __device__ void add_up(int *matriz, int x, int y, int altura, int anchura)
 {
 	if (x != 0 && y < anchura)
@@ -56,6 +59,9 @@ __device__ void add_up(int *matriz, int x, int y, int altura, int anchura)
 	}
 }
 
+/*	stack_up
+*	Función del kernel para desplazar todos los números hacia arriba.
+*/
 __device__ void stack_up(int *matriz, int anchura, int altura, int x, int y) {
 
 	for (int i = altura - 1; i > 0; i--)
@@ -68,7 +74,9 @@ __device__ void stack_up(int *matriz, int anchura, int altura, int x, int y) {
 		__syncthreads();
 	}
 }
-
+/*	mov_upK
+*	Kernel que gestiona las operaciones para mover hacia arriba los numeros, sumandolos en el proceso
+*/
 __global__ void mov_upK(int *matriz, int anchura, int altura) {
 	int x = blockIdx.x;
 	int y = threadIdx.y;
@@ -79,7 +87,9 @@ __global__ void mov_upK(int *matriz, int anchura, int altura) {
 	stack_up(matriz, anchura, altura, x, y);
 }
 
-
+/*	move_up
+*	Metodo que gestiona la llamada al kerner mov_upK
+*/
 cudaError_t move_up(int *matriz, int ancho, int alto) {
 	cudaError_t cudaStatus;
 
@@ -137,6 +147,9 @@ Error:
 	return cudaStatus;
 }
 
+/*	add_down
+*	Función del kernel para sumar hacia la abajo todos los números que sean iguales.
+*/
 __device__ void add_down(int *matriz, int x, int y, int altura, int anchura)
 {
 	if (x != altura - 1 && y < anchura)
@@ -172,6 +185,9 @@ __device__ void add_down(int *matriz, int x, int y, int altura, int anchura)
 	}
 }
 
+/*	stack_down
+*	Función del kernel para desplazar todos los números hacia abajo.
+*/
 __device__ void stack_down(int *matriz, int anchura, int altura, int x, int y) {
 
 	for (int i = altura - 1; i > 0; i--)
@@ -185,6 +201,10 @@ __device__ void stack_down(int *matriz, int anchura, int altura, int x, int y) {
 	}
 }
 
+
+/*	mov_downK
+*	Kernel que gestiona las operaciones para mover hacia abajo los numeros, sumandolos en el proceso
+*/
 __global__ void mov_downK(int *matriz, int anchura, int altura) {
 	int x = blockIdx.x;
 	int y = threadIdx.y;
@@ -195,6 +215,9 @@ __global__ void mov_downK(int *matriz, int anchura, int altura) {
 	stack_down(matriz, anchura, altura, x, y);
 }
 
+/*	move_down
+*	Metodo que gestiona la llamada al kerner mov_downK
+*/
 cudaError_t move_down(int *matriz, int ancho, int alto) {
 	cudaError_t cudaStatus;
 
@@ -251,6 +274,9 @@ Error:
 	return cudaStatus;
 }
 
+/*	add_left
+*	Función del kernel para sumar hacia la izquierda todos los números que sean iguales.
+*/
 __device__ void add_left(int *matriz, int x, int y, int altura, int anchura)
 {
 	if (y != 0 && y < anchura)
@@ -286,6 +312,9 @@ __device__ void add_left(int *matriz, int x, int y, int altura, int anchura)
 	}
 }
 
+/*	stack_left
+*	Función del kernel para desplazar todos los números hacia la izquierda.
+*/
 __device__ void stack_left(int *matriz, int anchura, int altura, int x, int y) {
 
 	for (int i = anchura - 1; i > 0; i--)
@@ -299,6 +328,10 @@ __device__ void stack_left(int *matriz, int anchura, int altura, int x, int y) {
 	}
 }
 
+
+/*	mov_leftK
+*	Kernel que gestiona las operaciones para mover hacia la izquierda los numeros, sumandolos en el proceso
+*/
 __global__ void mov_leftK(int *matriz, int anchura, int altura) {
 	int x = blockIdx.x;
 	int y = threadIdx.y;
@@ -309,6 +342,9 @@ __global__ void mov_leftK(int *matriz, int anchura, int altura) {
 	stack_left(matriz, anchura, altura, x, y);
 }
 
+/*	move_left
+*	Metodo que gestiona la llamada al kerner mov_leftK
+*/
 cudaError_t move_left(int *matriz, int ancho, int alto) {
 	cudaError_t cudaStatus;
 
@@ -365,6 +401,9 @@ Error:
 	return cudaStatus;
 }
 
+/*	add_right
+*	Función del kernel para sumar hacia la izquierda todos los números que sean iguales.
+*/
 __device__ void add_right(int *matriz, int x, int y, int altura, int anchura)
 {
 	if (y != anchura - 1 && y < anchura)
@@ -399,6 +438,10 @@ __device__ void add_right(int *matriz, int x, int y, int altura, int anchura)
 		}
 	}
 }
+
+/*	stack_right
+*	Función del kernel para desplazar todos los números hacia la derecha.
+*/
 __device__ void stack_right(int *matriz, int anchura, int altura, int x, int y) {
 
 	for (int i = anchura - 1; i > 0; i--)
@@ -412,6 +455,9 @@ __device__ void stack_right(int *matriz, int anchura, int altura, int x, int y) 
 	}
 }
 
+/*	mov_rightK
+*	Kernel que gestiona las operaciones para mover hacia la derecha los numeros, sumandolos en el proceso
+*/
 __global__ void mov_rightK(int *matriz, int anchura, int altura) {
 	int x = blockIdx.x;
 	int y = threadIdx.y;
@@ -423,7 +469,9 @@ __global__ void mov_rightK(int *matriz, int anchura, int altura) {
 }
 
 
-
+/*	move_right
+*	Metodo que gestiona la llamada al kerner mov_rightK
+*/
 cudaError_t move_right(int *matriz, int ancho, int alto) {
 	cudaError_t cudaStatus;
 
@@ -715,6 +763,9 @@ int main()
 	return 0;
 }
 
+/*	showMatriz
+*	Función que muestra la matriz por pantalla.
+*/
 void showMatriz(int *matriz, int anchura, int altura)
 {
 	for (int i = 0; i < altura; i++)
@@ -727,6 +778,10 @@ void showMatriz(int *matriz, int anchura, int altura)
 	}
 }
 
+/*	generateSeeds
+*	Función que genera una cantidad de semillas en la matriz, teniendo en cuenta sus dimensiones y en el modo de la dificultad que se encuentre. 
+*	Si es nivel bajo “B” entonces se crearán 15 semillas con los valores 2, 4 y 8. Si es nivel alto “A” se crearán 8 semillas con valores 2, 4
+*/
 void generateSeeds(int *matriz, int ancho, int alto, int cantidad, char modo)
 {
 	int total = ancho * alto;
@@ -777,7 +832,11 @@ void generateSeeds(int *matriz, int ancho, int alto, int cantidad, char modo)
 
 
 }
-
+/*	checkMove
+*	Función que gestiona si se pueden realizar movimientos o no, esto servirá por si aunque la matriz este llena,
+*	si se pueden realizar movimientos entonces no se acabe la partida. Para ello el método mirara en todas las
+*	direcciones del eje cartesiano para ver si algún número es igual que el y se puede sumar o en cambio, si es un 0, desplazarse por la matriz.
+*/
 bool checkMove(int *matriz, int anchura, int altura)
 {
 	for (int i = 0; i < anchura*(altura - 1); i++)
@@ -821,7 +880,9 @@ bool checkMove(int *matriz, int anchura, int altura)
 	return false;
 
 }
-
+/*	checkFull
+*	Función que gestiona si la matriz esta llena o no, es decir, si tiene algún 0 aún o no lo tiene. 
+*/
 int checkFull(int *matriz, int tamano)
 {
 	int flag = 1;
@@ -835,6 +896,10 @@ int checkFull(int *matriz, int tamano)
 	return flag;
 }
 
+/*	gestionSemillas
+*	Función que gestiona cuántos huecos libres hay en la matriz mediante un contador, para llamar posteriormente a generateSeeds para crear las semillas necesarias, 
+*	controlando en todo momento que el número de semillas a generar tengan hueco libre en la matriz.
+*/
 void gestionSemillas(int *matriz, int ancho, int numeroSemillas, int alto, char modo)
 {
 	if (!checkFull(matriz, ancho*alto))
@@ -870,7 +935,9 @@ void gestionSemillas(int *matriz, int ancho, int numeroSemillas, int alto, char 
 
 	}
 }
-
+/*	guardar
+*	Función encargada de guardar la partida en un archivo externo (.txt) para preservar en el tiempo la partida por si se desea reanudarla más tarde desde en el punto que se quedo.
+*/
 void guardar(int vidas, int *matriz, int altura, int anchura, char dificultad) {
 
 	ofstream archivo;
@@ -908,7 +975,9 @@ void guardar(int vidas, int *matriz, int altura, int anchura, char dificultad) {
 
 	archivo.close(); //Cerramos el archivo
 }
-
+/*	cargar
+*	Función que cargará la partida desde un archivo externo (.dat) en el vector de la matriz para proseguir jugando.
+*/
 int* cargar() {
 
 	ifstream archivo;
