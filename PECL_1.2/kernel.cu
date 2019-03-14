@@ -715,7 +715,6 @@ int main()
 	return 0;
 }
 
-// Metodo que SOLO muestra matrices cuadradas
 void showMatriz(int *matriz, int anchura, int altura)
 {
 	for (int i = 0; i < altura; i++)
